@@ -1,0 +1,13 @@
+Random Forest Performance:
+MAE: 1899.33
+RMSE: 2633.36
+R2: 0.45
+
+LSTM Performance:
+MAE: 3528.52
+RMSE: 4357.99
+R2: -0.51
+
+Future Price Predictions:
+Random Forest: $67,243.79
+LSTM: $67,046.68
