@@ -3,6 +3,7 @@ import numpy as np
 from data_processor import DataProcessor
 from models.lstm_model import LSTMPredictor, PyTorchTrainer
 from models.random_forest_model import RandomForestModel
+from models.xgboost_model import XGBoostModel
 from evaluation import evaluate_models, plot_predictions
 
 def main():
@@ -27,6 +28,12 @@ def main():
     rf_model.train(X_train.reshape(X_train.shape[0], -1), y_train)
     rf_predictions = rf_model.predict(X_test.reshape(X_test.shape[0], -1))
     
+    # Train XGBoost model
+    print("\nTraining XGBoost model...")
+    xgb_model = XGBoostModel()
+    xgb_model.train(X_train.reshape(X_train.shape[0], -1), y_train)
+    xgb_predictions = xgb_model.predict(X_test.reshape(X_test.shape[0], -1))
+    
     # Train LSTM model
     print("\nTraining LSTM model...")
     input_dim = X_train.shape[2]
@@ -43,27 +50,29 @@ def main():
     
     # Evaluate models
     print("\nEvaluating models...")
-    metrics = evaluate_models(y_test, rf_predictions, lstm_predictions, processor)
+    metrics = evaluate_models(y_test, rf_predictions, xgb_predictions, lstm_predictions, processor)
     
     # Plot results
-    plot_predictions(y_test, rf_predictions, lstm_predictions, 
+    plot_predictions(y_test, rf_predictions, xgb_predictions, lstm_predictions, 
                     processor, dates=data.index[-len(y_test):])
     
     # Make future predictions
     print("\nMaking future predictions...")
-    # Get the most recent sequence with the correct number of features
     latest_data = processor.prepare_future_sequence(data)
     
     # Make predictions
     rf_future = rf_model.predict(latest_data.reshape(1, -1))
-    lstm_future = trainer.predict(latest_data.reshape(1, 10, -1))  # Reshape for LSTM
+    xgb_future = xgb_model.predict(latest_data.reshape(1, -1))
+    lstm_future = trainer.predict(latest_data.reshape(1, 10, -1))
     
     # Inverse transform predictions
     rf_future = processor.price_scaler.inverse_transform(rf_future.reshape(-1, 1))[0][0]
+    xgb_future = processor.price_scaler.inverse_transform(xgb_future.reshape(-1, 1))[0][0]
     lstm_future = processor.price_scaler.inverse_transform(lstm_future.reshape(-1, 1))[0][0]
     
     print("\nFuture Price Predictions:")
     print(f"Random Forest: ${rf_future:,.2f}")
+    print(f"XGBoost: ${xgb_future:,.2f}")
     print(f"LSTM: ${lstm_future:,.2f}")
 
 if __name__ == "__main__":

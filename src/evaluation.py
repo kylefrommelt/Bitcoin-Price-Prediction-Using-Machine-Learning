@@ -2,14 +2,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-def evaluate_models(y_true, rf_pred, lstm_pred, processor=None):
+def evaluate_models(y_true, rf_pred, xgb_pred, lstm_pred, processor=None):
     if processor is not None:
         y_true = processor.price_scaler.inverse_transform(y_true.reshape(-1, 1))
         rf_pred = processor.price_scaler.inverse_transform(rf_pred.reshape(-1, 1))
+        xgb_pred = processor.price_scaler.inverse_transform(xgb_pred.reshape(-1, 1))
         lstm_pred = processor.price_scaler.inverse_transform(lstm_pred.reshape(-1, 1))
     
     models = {
         'Random Forest': rf_pred.flatten(),
+        'XGBoost': xgb_pred.flatten(),
         'LSTM': lstm_pred.flatten()
     }
     
@@ -27,10 +29,11 @@ def evaluate_models(y_true, rf_pred, lstm_pred, processor=None):
             
     return metrics
 
-def plot_predictions(y_true, rf_pred, lstm_pred, processor=None, dates=None):
+def plot_predictions(y_true, rf_pred, xgb_pred, lstm_pred, processor=None, dates=None):
     if processor is not None:
         y_true = processor.price_scaler.inverse_transform(y_true.reshape(-1, 1))
         rf_pred = processor.price_scaler.inverse_transform(rf_pred.reshape(-1, 1))
+        xgb_pred = processor.price_scaler.inverse_transform(xgb_pred.reshape(-1, 1))
         lstm_pred = processor.price_scaler.inverse_transform(lstm_pred.reshape(-1, 1))
     
     plt.figure(figsize=(15, 7))
@@ -40,6 +43,7 @@ def plot_predictions(y_true, rf_pred, lstm_pred, processor=None, dates=None):
     
     plt.plot(dates, y_true, label='Actual', color='black', alpha=0.7)
     plt.plot(dates, rf_pred, label='Random Forest', color='blue', alpha=0.5)
+    plt.plot(dates, xgb_pred, label='XGBoost', color='green', alpha=0.5)
     plt.plot(dates, lstm_pred, label='LSTM', color='red', alpha=0.5)
     
     plt.title('Bitcoin Price Predictions')
